@@ -71,3 +71,32 @@ Unlike ads driven discovery, a merchant becomes 'sellable to AI buyers' by havin
 the chain we got at last: take user query -> fetch a page of prodcuts nested with a page of reviewws for each product -> if you want more prodcuts can fetch -> if you want more reviews can fetch -> selected n prodcuts -> show them to user, here user can increase quantity select the prodcut, change the colour, show him with the reivews summary you had.
 The time in which the user is selecting the product and or making colour changes what ever, the stock chanages should be streaed to the user making sure he was aware so that can take decisions faster if the stock is lesser.
 So user had selected the product now the patement phase, i dont know that much about payements so we have to look inot it.
+
+
+Theres something i need to confirm first, 
+
+Build an agent that grows revenue for a merchant on Razorpay test-mode APIs, or that makes a merchant transactable by an AI buyer end to end.
+
+It is mentioned that to make merchant transactable for an ai buyer. Im not getting if we have just build the infra for the llm to access the prodcuts.
+or we also have create that agent ourselves.
+The first sounds similar,but in example directions it is also listed this: Conversational in-app checkout
+That means we can also develop the agent ourselves? i think so...
+
+we will do both of them but we will focus mainly on infra that agent interacts.
+
+Lets deeply discuss about the infra first.
+
+Lets think about what does an agent requrired to pick up products it wants.
+Maybe an api that serves products it wants by applying all the filters.
+
+Another doubt hrer again, are we really allowed to create our own schema and apply filters as our wish like it should also work with the real world or not?
+maybe i can because i need something to test on, so i can create my schema.
+
+First we should think of how do we store products we should store the products matching real world ecommerce platforms.
+
+The first thing that comes into my mind is to use sql for merchant data and customer data
+and no sql for product listing.
+
+but it might create a oroblem transactions should be atomic right we have things scattered inventory is in no sql and payment informations are in sql. This creates more complexity.
+So lets fall back to plain sql database only.
+In plain sql database only we can store the product card information but this creates problems right, if sotre the product information as jsob, how cna you track the category specific stocks
