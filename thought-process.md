@@ -106,3 +106,11 @@ Okay now lets research about this things are implemented or not, if implemented 
 https://stripe.com/in/guides/agentic-commerce
 
 While researching i found that open ai and stripe has partnered for this, but why did they backed out
+also amazon has blocked chat gpt or any other models from browsing the products so that users go directly into amazong and amazon can show them ads.
+
+we can do this, build an mcp server and expose it to claude or chat gpt.
+but it becomes complex exposing payement apis to a third party llm provider.
+we should secure it lets see...
+
+This dependency on a third party LLM provider for both conversation and payment auth is a real risk we can't fully control Claude Desktop or ChatGPT Desktop's UI, approval flow, or availability during judging. So we're keeping the MCP server as our open, interface (any agent can browse and query it), but the actual state machine pending orders, spend bounds, stock checks, signature verification, and the final payment gate lives entirely in our own server code, never trusted to the LLM's word alone. We'll build a minimal client of our own as the primary demo surface, so the gating and audit trail are things we visibly own and can defend, not something we ask the panel to trust because a third party client asked for permission. Claude/GPT Desktop can still connect to the same server as a secondary demo, proving the protocol is genuinely open just not our load-bearing safety mechanism.
+
