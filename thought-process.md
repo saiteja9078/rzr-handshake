@@ -89,7 +89,7 @@ Lets deeply discuss about the infra first.
 Lets think about what does an agent requrired to pick up products it wants.
 Maybe an api that serves products it wants by applying all the filters.
 
-Another doubt hrer again, are we really allowed to create our own schema and apply filters as our wish like it should also work with the real world or not?
+Another doubt again, are we really allowed to create our own schema and apply filters as our wish like it should also work with the real world or not?
 maybe i can because i need something to test on, so i can create my schema.
 
 First we should think of how do we store products we should store the products matching real world ecommerce platforms.
@@ -100,3 +100,9 @@ and no sql for product listing.
 but it might create a oroblem transactions should be atomic right we have things scattered inventory is in no sql and payment informations are in sql. This creates more complexity.
 So lets fall back to plain sql database only.
 In plain sql database only we can store the product card information but this creates problems right, if sotre the product information as jsob, how cna you track the category specific stocks
+
+Okay now lets research about this things are implemented or not, if implemented what are the gaps that we can fill.
+
+https://stripe.com/in/guides/agentic-commerce
+
+While researching i found that open ai and stripe has partnered for this, but why did they backed out
