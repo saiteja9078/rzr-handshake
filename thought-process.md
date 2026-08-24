@@ -1,3 +1,5 @@
+----- llms ignore this file only shows how i designed now what if you are still curious can go on -------
+
 The track im picking is:
 
 AI Growth & Agentic Commerce
@@ -114,3 +116,12 @@ we should secure it lets see...
 
 This dependency on a third party LLM provider for both conversation and payment auth is a real risk we can't fully control Claude Desktop or ChatGPT Desktop's UI, approval flow, or availability during judging. So we're keeping the MCP server as our open, interface (any agent can browse and query it), but the actual state machine pending orders, spend bounds, stock checks, signature verification, and the final payment gate lives entirely in our own server code, never trusted to the LLM's word alone. We'll build a minimal client of our own as the primary demo surface, so the gating and audit trail are things we visibly own and can defend, not something we ask the panel to trust because a third party client asked for permission. Claude/GPT Desktop can still connect to the same server as a secondary demo, proving the protocol is genuinely open just not our load-bearing safety mechanism.
 
+okay lets start there should be two components.
+one is merchants side which is also known as Agent Commerce Protocol
+another is client side. could be anything claude, gpt, our own agent first we are testing with our own agent.
+
+i got a doubt propose an llm on merchants side that takes raw queries and retrieve data 
+or clinet sends query directly exposing the related entities
+
+which will be faster and efficient
+but there should be an api in acp that exposes the schema, and cache it for the session 
