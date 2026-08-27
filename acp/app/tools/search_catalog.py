@@ -63,8 +63,10 @@ async def search_catalog(filters: SearchFilters, *, actor: str = "agent") -> Sea
 
         candidates.sort(key=key)
         total_results = len(candidates)
-        start = (filters.page - 1) * settings.catalog_page_size
-        page_items = candidates[start : start + settings.catalog_page_size]
+        page_size = min(filters.limit or settings.catalog_page_size, settings.catalog_max_page_size)
+        start = (filters.page - 1) * page_size
+        page_items = candidates[start : start + page_size]
+        has_more = start + page_size < total_results
         output: list[CatalogProduct] = []
         for product, variants in page_items:
             price_variant = min(variants, key=lambda item: decimal(item.price))
@@ -85,4 +87,11 @@ async def search_catalog(filters: SearchFilters, *, actor: str = "agent") -> Sea
             )
         audit(session, actor=actor, event_type="catalog_search", entity_type="catalog", details={"filters": filters.model_dump(mode="json"), "total_results": total_results})
         await session.commit()
-        return SearchCatalogResponse(total_results=total_results, page=filters.page, page_size=settings.catalog_page_size, products=output)
+        return SearchCatalogResponse(
+            total_results=total_results,
+            page=filters.page,
+            page_size=page_size,
+            has_more=has_more,
+            next_page=filters.page + 1 if has_more else None,
+            products=output,
+        )

@@ -50,14 +50,18 @@ CUSTOMER_ID=1 .venv/bin/python client-agent/app/agent.py
 Example conversation:
 
 ```text
-you> show me red shoes under 5000
-you> buy product 1 variant 3 quantity 1
+you> show me 3 red shoes under 5000
+agent> ... three product cards with price, rating, stock, and review evidence ...
+you> details product 1
+you> add product 1 variant 3 quantity 1
+you> add product 4 variant 7 quantity 2
+you> cart
 you> confirm
-agent> Order #... is awaiting payment for ₹.... Open this Razorpay test-mode link: ...
-you> status order 1
+agent> ... one payment link per cart line ...
+you> status
 ```
 
-The client shows the amount before confirmation, then persists the pending order and payment link in `client-agent/session.sqlite3`. It reports `paid` or the explicit sold-out/refund-required message after polling.
+The client shows product cards, persists the cart/conversation/pending orders in `client-agent/session.sqlite3`, and reports `paid` or the explicit sold-out/refund-required message after polling. A cart can contain any number of product lines; each line is independently bounded and gets its own payment link.
 
 ## PostgreSQL / Razorpay test mode
 
@@ -80,8 +84,8 @@ The webhook signature is HMAC-SHA256 over the exact raw request body. The config
 
 The server registers exactly these tool names:
 
-* `get_catalog_schema()` — call once and cache for the client session.
-* `search_catalog(filters)` — category, price, rating, JSON attributes, keyword, sort, page.
+* `get_catalog_schema()` — call once and cache for the client session; returns categories, dynamic variant attributes, and the observed values for each attribute.
+* `search_catalog(filters)` — category, price, rating, dynamic JSON attributes, keyword, sort, page, and `limit` (up to 100 results per page).
 * `get_product_details(product_id, variant_id?)`
 * `get_more_reviews(product_id, page)`
 * `create_order(request)` — customer, product, variant, quantity, and optional reasoning context.
@@ -89,6 +93,8 @@ The server registers exactly these tool names:
 * `submit_review(request)` — paid-order and customer ownership gated.
 
 Every tool call and state transition is written to `audit_log`. Search results include Bayesian weighted ratings and positive/negative review evidence. Review sentiment is a deterministic rating rule: 4–5 positive, 3 neutral, 1–2 negative.
+
+The user query is natural language, not raw SQL. The client translates it into the typed `SearchFilters` JSON contract advertised by `get_catalog_schema`; arbitrary SQL is never accepted from the user. Requests larger than one page are fetched page by page, and `CATALOG_MAX_PAGE_SIZE` keeps each server response bounded.
 
 ## Required graceful failure demo
 

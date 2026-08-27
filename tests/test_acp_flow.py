@@ -65,6 +65,7 @@ async def test_schema_search_and_server_side_bounds(db_setup):
     schema = await get_catalog_schema()
     assert "shoes" in schema.categories
     assert "color" in schema.attributes_by_category["shoes"]
+    assert "red" in schema.attribute_values_by_category["shoes"]["color"]
     results = await search_catalog(SearchFilters(category="shoes", attributes={"color": "red"}))
     assert results.total_results == 1
     assert results.products[0].discount_pct == Decimal("20.00")
@@ -73,6 +74,31 @@ async def test_schema_search_and_server_side_bounds(db_setup):
     rejected = await create_order(CreateOrderInput(customer_id=db_setup["customer"], product_id=db_setup["product"], variant_id=db_setup["roomy"], quantity=11), payment_client=client)
     assert rejected.error == "exceeds_bounds"
     assert not client.calls
+
+
+@pytest.mark.asyncio
+async def test_catalog_result_count_and_pagination(db_setup):
+    async with SessionLocal() as session:
+        base = await session.get(Product, db_setup["product"])
+        extra_one = Product(merchant_id=base.merchant_id, name="RZR Sprint", brand="Handshake", category="shoes", description="A second test shoe", rating_avg=Decimal("4.0"), rating_count=10, bayesian_rating=Decimal("3.8"))
+        extra_two = Product(merchant_id=base.merchant_id, name="RZR Trail", brand="Handshake", category="shoes", description="A third test shoe", rating_avg=Decimal("4.5"), rating_count=20, bayesian_rating=Decimal("4.2"))
+        session.add_all([extra_one, extra_two])
+        await session.flush()
+        session.add_all([
+            Variant(product_id=extra_one.id, attributes={"color": "black"}, price=Decimal("800.00"), stock_qty=4),
+            Variant(product_id=extra_two.id, attributes={"color": "green"}, price=Decimal("1500.00"), stock_qty=4),
+        ])
+        await session.commit()
+
+    first_page = await search_catalog(SearchFilters(category="shoes", limit=1))
+    assert first_page.total_results == 3
+    assert len(first_page.products) == 1
+    assert first_page.has_more is True
+    assert first_page.next_page == 2
+
+    second_page = await search_catalog(SearchFilters(category="shoes", limit=1, page=2))
+    assert len(second_page.products) == 1
+    assert second_page.products[0].id != first_page.products[0].id
 
 
 @pytest.mark.asyncio

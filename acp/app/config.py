@@ -27,6 +27,7 @@ class Settings:
     max_spend: Decimal = _decimal_env("MAX_SPEND", "100000.00")
     reviews_page_size: int = int(os.getenv("REVIEWS_PAGE_SIZE", "5"))
     catalog_page_size: int = int(os.getenv("CATALOG_PAGE_SIZE", "10"))
+    catalog_max_page_size: int = int(os.getenv("CATALOG_MAX_PAGE_SIZE", "100"))
 
 
 settings = Settings()

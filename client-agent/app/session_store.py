@@ -39,6 +39,14 @@ class SessionStore:
                     payload TEXT NOT NULL,
                     updated_at TEXT NOT NULL
                 );
+                CREATE TABLE IF NOT EXISTS cart_items (
+                    customer_id INTEGER NOT NULL,
+                    product_id INTEGER NOT NULL,
+                    variant_id INTEGER NOT NULL,
+                    quantity INTEGER NOT NULL CHECK (quantity > 0),
+                    updated_at TEXT NOT NULL,
+                    PRIMARY KEY(customer_id, product_id, variant_id)
+                );
                 """
             )
 
@@ -94,3 +102,39 @@ class SessionStore:
     def clear_pending_action(self, customer_id: int) -> None:
         with self._connect() as connection:
             connection.execute("DELETE FROM pending_actions WHERE customer_id = ?", (customer_id,))
+
+    def add_cart_item(self, customer_id: int, *, product_id: int, variant_id: int, quantity: int) -> int:
+        """Add to the durable cart and return the resulting line quantity."""
+        with self._connect() as connection:
+            row = connection.execute(
+                "SELECT quantity FROM cart_items WHERE customer_id = ? AND product_id = ? AND variant_id = ?",
+                (customer_id, product_id, variant_id),
+            ).fetchone()
+            new_quantity = (int(row[0]) if row else 0) + quantity
+            connection.execute(
+                """INSERT INTO cart_items(customer_id, product_id, variant_id, quantity, updated_at)
+                   VALUES (?, ?, ?, ?, ?)
+                   ON CONFLICT(customer_id, product_id, variant_id)
+                   DO UPDATE SET quantity=excluded.quantity, updated_at=excluded.updated_at""",
+                (customer_id, product_id, variant_id, new_quantity, self._now()),
+            )
+        return new_quantity
+
+    def cart_items(self, customer_id: int) -> list[dict[str, int]]:
+        with self._connect() as connection:
+            rows = connection.execute(
+                "SELECT product_id, variant_id, quantity FROM cart_items WHERE customer_id = ? ORDER BY updated_at, product_id, variant_id",
+                (customer_id,),
+            ).fetchall()
+        return [{"product_id": row[0], "variant_id": row[1], "quantity": row[2]} for row in rows]
+
+    def remove_cart_item(self, customer_id: int, *, product_id: int, variant_id: int) -> None:
+        with self._connect() as connection:
+            connection.execute(
+                "DELETE FROM cart_items WHERE customer_id = ? AND product_id = ? AND variant_id = ?",
+                (customer_id, product_id, variant_id),
+            )
+
+    def clear_cart(self, customer_id: int) -> None:
+        with self._connect() as connection:
+            connection.execute("DELETE FROM cart_items WHERE customer_id = ?", (customer_id,))

@@ -11,6 +11,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 class CatalogSchemaResponse(BaseModel):
     categories: list[str]
     attributes_by_category: dict[str, list[str]]
+    attribute_values_by_category: dict[str, dict[str, list[str]]] = Field(default_factory=dict)
     price_range: dict[str, Decimal | None]
     sort_options: list[str] = ["rating", "price_asc", "price_desc"]
 
@@ -24,6 +25,7 @@ class SearchFilters(BaseModel):
     keyword: str | None = None
     sort_by: Literal["rating", "price_asc", "price_desc"] = "rating"
     page: int = Field(default=1, ge=1)
+    limit: int | None = Field(default=None, ge=1, le=100)
 
     @field_validator("max_price")
     @classmethod
@@ -64,6 +66,8 @@ class SearchCatalogResponse(BaseModel):
     total_results: int
     page: int
     page_size: int
+    has_more: bool = False
+    next_page: int | None = None
     products: list[CatalogProduct]
 
 
